@@ -13,20 +13,20 @@ class TestProduction():
 
     def test_from_text(self):
         text = 'S->aSb'
-        production = lfc.Production.from_text(text=text)
+        production = lfc.Production.from_text(text)
         assert production.driver == ['S']
         assert production.body == ['a', 'S', 'b']
 
         text = 'Ab->'
-        production = lfc.Production.from_text(text=text)
+        production = lfc.Production.from_text(text)
         assert production.driver == ['A', 'b']
         assert not production.body
 
     def test_str(self):
         text = 'S->aSb'
-        production = lfc.Production.from_text(text=text)
+        production = lfc.Production.from_text(text)
         assert text == production.__str__()
 
         text = 'Ab->'
-        production = lfc.Production.from_text(text=text)
+        production = lfc.Production.from_text(text)
         assert text + '𝜀' == production.__str__()
