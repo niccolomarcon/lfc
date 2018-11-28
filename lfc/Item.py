@@ -1,5 +1,5 @@
 from .Production import Production
-from .utils import is_set_of, printable_set
+from .utils import is_set_of, printable_set, is_frozenset_of
 
 
 class Item:
@@ -34,7 +34,7 @@ class Item:
     def __str__(self) -> str:
         driver = ''.join(self.prd.driver)
         body = self.prd.body[:self.dot] + ['·'] + self.prd.body[self.dot:]
-        delta = printable_set(self.delta)
+        delta = printable_set(sorted(self.delta))
         return f'[{driver}->{"".join(body)}, {delta}]'
 
     def dot_next(self) -> str:
@@ -137,6 +137,6 @@ def kernel(q: set, s_first: str, s: str) -> set:
     :param s:
     :return:
     """
-    if not is_set_of(q, Item):
+    if not (is_set_of(q, Item) or is_frozenset_of(q, Item)):
         raise TypeError
     return set(filter(lambda i: i.kernel(s_first, s), q))
