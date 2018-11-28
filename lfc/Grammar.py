@@ -210,6 +210,34 @@ class Grammar:
 
         return q, self.alphabet, move, p0, set()
 
+    def bottom_up_parsing_table(self, s_first: str) -> list:
+        Q, V, move, s0, F = self.characteristic_automata(s_first)
+        states_list = [s0] + list(Q.difference({s0}))
+        conversion_table = {state: i for i, state in enumerate(states_list)}
+
+        PT = [{} for _ in states_list]
+
+        def add(P, Y, op):
+            if Y not in PT[conversion_table[P]]:
+                PT[conversion_table[P]][Y] = []
+            if op not in PT[conversion_table[P]][Y]:
+                PT[conversion_table[P]][Y].append(op)
+
+        for P in Q:
+            for Y in V.union({'$'}):
+                if Y in self.terminals and (P, Y) in move and move[(P, Y)] in Q:
+                    add(P, Y, f'SHIFT {conversion_table[move[(P, Y)]]}')
+                if any(item.reduction(s_first, self.start_symbol) for item in P):
+                    for item in filter(lambda i: i.reduction(s_first, self.start_symbol), P):
+                        for X in item.delta:
+                            add(P, X, f'REDUCE {item.prd}')
+                if any(item.final(s_first, self.start_symbol) for item in P):
+                    add(P, '$', 'ACCEPT')
+                if Y not in self.terminals and (P, Y) in move and move[(P, Y)] in Q:
+                    add(P, Y, f'GOTO {conversion_table[move[(P, Y)]]}')
+
+        return PT
+
     def __str__(self) -> str:
         v = printable_set(self.alphabet)
         t = printable_set(self.terminals)
