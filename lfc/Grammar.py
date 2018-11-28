@@ -72,61 +72,91 @@ class Grammar:
         free = self.is_free()
         return free and all(body_check(p.body) for p in self.productions)
 
-    def first(self, w: list) -> list:
+    def first(self, X: list) -> list:
         """
         Find the first set of a list of strings
-        :param w:
+        :param X:
         :return:
         """
-        if not is_list_of(w, str):
+        if not is_list_of(X, str):
             raise TypeError
 
-        # Joining the elements in w in a string to use it as a hash for memo
-        w_joined = ''.join(w)
-        if w_joined in self.__memo:
-            return self.__memo[w_joined]
+        # Joining the elements in X in a string to use it as a hash for memo
+        X_joined = ''.join(X)
+        if X_joined in self.__memo:
+            return self.__memo[X_joined]
         else:
-            first_w = set()
-            if len(w) == 1:
-                if w[0] in self.terminals or w[0] == '$':
-                    first_w.add(w[0])
-                elif w[0] in self.alphabet:  # => w[0] is a non terminal
-                    if Production(w, []) in self.productions:  # W->𝝴
-                        first_w.add('')
-                    w_prods = [p for p in self.productions if p.driver == w]
-                    for production in w_prods:
-                        for y in production.body:
-                            if w != [y]:  # This prevents infinite recursion
-                                # first_w U (first_y \ {𝝴})
-                                first_y = self.first([y])
-                                first_y_without_e = first_y.copy()
-                                if '' in first_y_without_e:
-                                    first_y_without_e.remove('')
-                                first_w = first_w.union(first_y_without_e)
-                            else:
-                                first_y = first_w
-                            if '' not in first_y:
-                                break
-                        else:
-                            first_w.add('')
-                else:
-                    # w[0] is not in the alphabet of the grammar
-                    raise ValueError
-            else:
-                for y in w:
-                    # first_w U (first_y \ {𝝴})
-                    first_y = self.first([y])
-                    first_y_without_e = first_y.copy()
-                    if '' in first_y_without_e:
-                        first_y_without_e.remove('')
-                    first_w = first_w.union(first_y_without_e)
-                    if '' not in first_y:
-                        break
-                else:
-                    first_w.add('')
+            first_X = set()
 
-            self.__memo[w_joined] = first_w
-            return first_w
+            # if |X| = 1
+            if len(X) == 1:
+                # if X∈T then
+                X = X[0]
+                if X in self.terminals or X == '$':
+                    # first(X) <- {X}
+                    first_X = {X}
+                # if X∈V∖T then
+                elif X in self.alphabet:
+                    # first(X) <- ∅
+                    first_X = set()
+
+                    # if X->𝝴 ∈ P then
+                    if Production([X], []) in self.productions:
+                        # 𝝴 ∈ first(X)
+                        first_X.add('')
+
+                    # foreach X->Y1...Yn ∈ P with n≥1 do
+                    def X_filter(p):
+                        return p.driver == [X] and len(p.body) > 0
+
+                    X_productions = filter(X_filter, self.productions)
+                    for p in X_productions:
+                        # j <- 1
+                        # while j ≤ n do
+                        for Y in p.body:
+                            # first(X) <- first(X) ∪ (first(Yj) ∖ {𝝴})
+                            if X != Y:
+                                first_Y = self.first([Y])
+                                first_X = first_X.union(first_Y.difference({''}))
+                            else:
+                                first_Y = first_X
+
+                            # if 𝝴 ∈ first(Yj) then
+                            if '' in first_Y:
+                                # j <- j + 1 then
+                                pass
+                            # else
+                            else:
+                                # break
+                                break
+                        # if j = n + 1 then
+                        else:
+                            # 𝝴 ∈ first(X)
+                            first_X.add('')
+            # else
+            elif len(X) > 1:
+                # j <- 1
+                # while j ≤ n where n = |X| do
+                for Y in X:
+                    # first(X) <- first(X) ∪ (first(Yj) ∖ {𝝴})
+                    first_Y = self.first([Y])
+                    first_X = first_X.union(first_Y.difference({''}))
+
+                    # if 𝝴 ∈ first(Yj) then
+                    if '' in first_Y:
+                        # j <- j + 1 then
+                        pass
+                    # else
+                    else:
+                        # break
+                        break
+                # if j = n + 1 then
+                else:
+                    # 𝝴 ∈ first(X)
+                    first_X.add('')
+
+            self.__memo[X_joined] = first_X
+            return first_X
 
     def closure1(self, p: set) -> set:
         if not is_set_of(p, Item):
@@ -210,8 +240,11 @@ class Grammar:
 
         return q, self.alphabet, move, p0, set()
 
-    def bottom_up_parsing_table(self, s_first: str) -> list:
-        Q, V, move, s0, F = self.characteristic_automata(s_first)
+    def bottom_up_parsing_table(self, s_first: str, automata=None) -> list:
+        if automata is None:
+            Q, V, move, s0, F = self.characteristic_automata(s_first)
+        else:
+            Q, V, move, s0, F = automata
         states_list = [s0] + list(Q.difference({s0}))
         conversion_table = {state: i for i, state in enumerate(states_list)}
 
