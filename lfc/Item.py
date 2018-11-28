@@ -103,7 +103,7 @@ class Item:
         :param s:
         :return:
         """
-        return len(self.after_dot()) == 0 and not self.final(s_first, s)
+        return len(self.prd.body[self.dot:]) == 0 and not self.final(s_first, s)
 
     def next(self) -> 'Item':
         """
