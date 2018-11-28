@@ -259,17 +259,58 @@ class Grammar:
         for P in Q:
             for Y in V.union({'$'}):
                 if Y in self.terminals and (P, Y) in move and move[(P, Y)] in Q:
-                    add(P, Y, f'SHIFT {conversion_table[move[(P, Y)]]}')
+                    add(P, Y, ('SHIFT', conversion_table[move[(P, Y)]]))
                 if any(item.reduction(s_first, self.start_symbol) for item in P):
                     for item in filter(lambda i: i.reduction(s_first, self.start_symbol), P):
                         for X in item.delta:
-                            add(P, X, f'REDUCE {item.prd}')
+                            add(P, X, ('REDUCE', item.prd))
                 if any(item.final(s_first, self.start_symbol) for item in P):
-                    add(P, '$', 'ACCEPT')
+                    add(P, '$', ('ACCEPT', ''))
                 if Y not in self.terminals and (P, Y) in move and move[(P, Y)] in Q:
-                    add(P, Y, f'GOTO {conversion_table[move[(P, Y)]]}')
+                    add(P, Y, ('GOTO', conversion_table[move[(P, Y)]]))
 
         return PT
+
+    def shift_reduce(self, T, input):
+        # c <- get_next_char(input_stack)
+        input_stack = iter(input)
+        c = next(input_stack)
+
+        # state_stack.push(0)
+        state_stack = [0]
+        symbol_stack = []
+        production_stack = []
+
+        while True:
+            op, arg = T[state_stack[-1]][c]
+            if op == 'SHIFT':  # T[state_stack.top(), c] == shift Q
+                symbol_stack.append(c)
+                state_stack.append(arg)
+                c = next(input_stack)
+            elif op == 'REDUCE':  # T[state_stack.top(), c] == reduce A->𝝱
+                A = arg.driver[0]
+                beta = arg.body
+
+                # for i ∈ [1...|𝝱|] do
+                for i in range(len(beta)):
+                    symbol_stack.pop()
+                    state_stack.pop()
+
+                symbol_stack.append(A)
+                # state_stack.push(T[state_stack.top(), A])
+                goto, state = T[state_stack[-1]][A]
+                if goto == 'GOTO':
+                    state_stack.append(state)
+                    # print(A->𝝱)
+                    production_stack.append(arg)
+                else:
+                    return []
+            elif op == 'ACCEPT':
+                break
+            else:
+                return []
+
+        return production_stack
 
     def __str__(self) -> str:
         v = printable_set(self.alphabet)
