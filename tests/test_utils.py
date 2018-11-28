@@ -1,6 +1,7 @@
 from context import lfc
 
-def test_is_colleciton_of():
+
+def test_is_collection_of():
     list_of_strings = ['a', 'b', 'c']
     list_of_multiple_type = [1, 'a', []]
     empty_list = []
