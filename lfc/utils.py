@@ -20,6 +20,16 @@ def is_set_of(x: object, t: type) -> bool:
     return is_collection_of(x, set, t)
 
 
+def is_frozenset_of(x: object, t: type) -> bool:
+    """
+    Controls if an object is a frozenset of a specific type
+    :param x: The object to control
+    :param t: The type all items should be
+    :return: True if all the items in the frozenset are the specified type
+    """
+    return is_collection_of(x, frozenset, t)
+
+
 def is_list_of(x: object, t: type) -> bool:
     """
     Controls if an object is a list of a specific type
