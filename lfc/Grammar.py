@@ -282,6 +282,8 @@ class Grammar:
         production_stack = []
 
         while True:
+            if len(state_stack) == 0 or c not in T[state_stack[-1]]:
+                return []
             op, arg = T[state_stack[-1]][c]
             if op == 'SHIFT':  # T[state_stack.top(), c] == shift Q
                 symbol_stack.append(c)
@@ -298,6 +300,8 @@ class Grammar:
 
                 symbol_stack.append(A)
                 # state_stack.push(T[state_stack.top(), A])
+                if len(state_stack) == 0 or A not in T[state_stack[-1]]:
+                    return []
                 goto, state = T[state_stack[-1]][A]
                 if goto == 'GOTO':
                     state_stack.append(state)
