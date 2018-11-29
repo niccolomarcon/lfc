@@ -149,3 +149,6 @@ class RegEx:
             self.NFA = thompson(operations, names)
         else:
             raise ValueError
+
+    def is_in(self, word: str) -> bool:
+        return self.NFA.simulate(word + '$')
