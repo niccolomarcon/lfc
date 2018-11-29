@@ -103,7 +103,7 @@ class NFA:
 
         return NFA(set(r), self.alphabet, move, mapper[self.initial_state], f)
 
-    def make_compatible(self, other, start_from=1):
+    def make_compatible(self, other: 'NFA', start_from=1) -> ('NFA', 'NFA', int):
         # Find how many states we need
         states_total_n = len(self.states) + len(other.states)
 
@@ -121,9 +121,44 @@ class NFA:
 
         return n1, n2, states_total_n
 
-    def add_transition(self, from_state, char, to):
+    def add_transition(self, from_state: int, char: str, to: int):
         k = (from_state, char)
         if k not in self.move:
             self.move[k] = {to}
         else:
             self.move[k].add(to)
+
+    def epsilon_closure(self, states: set, visited: set=None) -> set:
+        closure = set()
+        if visited is None:
+            visited = set()
+
+        for state in states:
+            closure.add(state)
+            visited.add(state)
+
+            k = (state, '')
+            if k in self.move:
+                not_visited = self.move[k].difference(visited)
+                other_closure = self.epsilon_closure(not_visited, visited)
+                closure = closure.union(other_closure)
+
+        return closure
+
+    def simulate(self, word: str) -> bool:
+        input_stack = iter(word)
+        symbol = next(input_stack)
+        states = self.epsilon_closure({self.initial_state})
+
+        while symbol != '$':
+            # closure(U move(t, symbol) for t in states)
+            closure = set()
+            for state in states:
+                k = (state, symbol)
+                if k in self.move:
+                    closure = closure.union(self.epsilon_closure(self.move[k]))
+
+            states = closure
+            symbol = next(input_stack)
+
+        return states.intersection(self.final_states) != set()
