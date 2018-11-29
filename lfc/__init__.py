@@ -1,6 +1,6 @@
 from .Grammar import Grammar
 from .Item import Item
-from .NFA import NFA
+from .FSA import FSA
 from .Production import Production
 from .RegEx import RegEx
 from .utils import *

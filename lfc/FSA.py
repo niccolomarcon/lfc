@@ -1,5 +1,8 @@
-class NFA:
-    def __init__(self, S: set, A: set, move: dict, s0: int, F: set) -> 'NFA':
+from functools import reduce
+
+
+class FSA:
+    def __init__(self, S: set, A: set, move: dict, s0: int, F: set) -> 'FSA':
         # TODO: control the types
         valid = F.issubset(S)
         valid &= s0 in S
@@ -13,7 +16,7 @@ class NFA:
         else:
             raise TypeError
 
-    def pipe(self, other: 'NFA') -> 'NFA':
+    def pipe(self, other: 'FSA') -> 'FSA':
         nfa1, nfa2, n = self.make_compatible(other)
         final_state = n + 1
 
@@ -28,7 +31,7 @@ class NFA:
         for k in nfa2.move:
             move[k] = nfa2.move[k]
 
-        new_nfa = NFA(s, a, move, 0, {final_state})
+        new_nfa = FSA(s, a, move, 0, {final_state})
 
         new_nfa.add_transition(0, '', nfa1.initial_state)
         new_nfa.add_transition(0, '', nfa2.initial_state)
@@ -40,7 +43,7 @@ class NFA:
 
         return new_nfa
 
-    def concat(self, other: 'NFA') -> 'NFA':
+    def concat(self, other: 'FSA') -> 'FSA':
         nfa1, nfa2, _ = self.make_compatible(other, start_from=0)
 
         s = nfa1.states.union(nfa2.states)
@@ -50,7 +53,7 @@ class NFA:
         for k in nfa2.move:
             move[k] = nfa2.move[k]
 
-        new_nfa = NFA(s, a, move, nfa1.initial_state, nfa2.final_states)
+        new_nfa = FSA(s, a, move, nfa1.initial_state, nfa2.final_states)
 
         # Add an 𝝴-transition between the final state of nfa1 and the initial
         # state of nfa2
@@ -59,7 +62,7 @@ class NFA:
 
         return new_nfa
 
-    def repeated(self) -> 'NFA':
+    def repeated(self) -> 'FSA':
         # Create the space for 2 new states
         n_states = len(self.states)
         nfa = self.rename(range(1, n_states + 1))
@@ -84,7 +87,7 @@ class NFA:
 
         return nfa
 
-    def rename(self, r: range) -> 'NFA':
+    def rename(self, r: range) -> 'FSA':
         if len(r) != len(self.states):
             raise ValueError
 
@@ -101,9 +104,9 @@ class NFA:
             to = {mapper[s] for s in self.move[k]}
             move[(mapper[state], char)] = to
 
-        return NFA(set(r), self.alphabet, move, mapper[self.initial_state], f)
+        return FSA(set(r), self.alphabet, move, mapper[self.initial_state], f)
 
-    def make_compatible(self, other: 'NFA', start_from=1) -> ('NFA', 'NFA', int):
+    def make_compatible(self, other: 'FSA', start_from=1) -> ('FSA', 'FSA', int):
         # Find how many states we need
         states_total_n = len(self.states) + len(other.states)
 
@@ -146,6 +149,16 @@ class NFA:
         return closure
 
     def simulate(self, word: str) -> bool:
+        if self.non_deterministic:
+            return self.__nfa_simulate(word)
+
+    def non_deterministic(self) -> bool:
+        transitions = {c for _, c in self.move}
+        states_per_transition = [len(self.move[k]) for k in self.move]
+
+        return '' in transitions or reduce(max, states_per_transition, 0) > 1
+
+    def __nfa_simulate(self, word: str) -> bool:
         input_stack = iter(word)
         symbol = next(input_stack)
         states = self.epsilon_closure({self.initial_state})

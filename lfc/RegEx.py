@@ -1,4 +1,4 @@
-from lfc import Production, Grammar, NFA
+from lfc import Production, Grammar, FSA
 
 
 def translate(text):
@@ -107,14 +107,14 @@ def parse(r):
     return g.shift_reduce(PT, r)
 
 
-def thompson(ops: list, names: list, epsilon: str='𝝴') -> 'NFA':
+def thompson(ops: list, names: list, epsilon: str='𝝴') -> 'FSA':
     op: Production = ops.pop()
     if op == Production.from_text('R->a'):
         name = names.pop() if names[-1] != epsilon else ''
         a = {name} if name != epsilon else set()
         move = {(0, name): {1}}
 
-        return NFA({0, 1}, a, move, 0, {1})
+        return FSA({0, 1}, a, move, 0, {1})
 
     elif op == Production.from_text('R->(R)'):
         return thompson(ops, names, epsilon)
@@ -146,9 +146,9 @@ class RegEx:
         operations = parse(r)
 
         if len(operations) > 0:
-            self.NFA = thompson(operations, names)
+            self.automata = thompson(operations, names)
         else:
             raise ValueError
 
     def is_in(self, word: str) -> bool:
-        return self.NFA.simulate(word + '$')
+        return self.automata.simulate(word + '$')
