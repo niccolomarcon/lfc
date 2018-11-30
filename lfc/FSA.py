@@ -1,4 +1,5 @@
 from functools import reduce
+from .utils import union
 
 
 class FSA:
@@ -149,8 +150,10 @@ class FSA:
         return closure
 
     def simulate(self, word: str) -> bool:
-        if self.non_deterministic:
+        if self.non_deterministic():
             return self.__nfa_simulate(word)
+        else:
+            return self.__dfa_simulate(word)
 
     def non_deterministic(self) -> bool:
         transitions = {c for _, c in self.move}
@@ -175,3 +178,48 @@ class FSA:
             symbol = next(input_stack)
 
         return states.intersection(self.final_states) != set()
+
+    def __dfa_simulate(self, word: str) -> bool:
+        state = self.initial_state
+        input_stack = iter(word)
+        symbol = next(input_stack)
+
+        while symbol != '$' and state is not None:
+            k = (state, symbol)
+
+            state = list(self.move[k])[0] if k in self.move else None
+            symbol = next(input_stack)
+
+        return state in self.final_states
+
+    def subset(self) -> 'FSA':
+        if not self.non_deterministic():
+            return self.copy()
+
+        s0 = frozenset(self.epsilon_closure({self.initial_state}))
+        S = {s0}
+        unmarked = S.copy()
+        move = {}
+
+        while len(unmarked) > 0:
+            t = unmarked.pop()
+
+            for b in self.alphabet:
+                states2b = [self.move[(s, b)] for s in t if (s, b) in self.move]
+                t_first = self.epsilon_closure(reduce(union, states2b, set()))
+
+                if len(t_first) > 0:
+                    t_first = frozenset(t_first)
+                    move[(t, b)] = {t_first}
+
+                    if t_first not in S:
+                        S.add(t_first)
+                        unmarked.add(t_first)
+
+        F = {t for t in S if len(t.intersection(self.final_states)) > 0}
+
+        dfa = FSA(S, self.alphabet, move, s0, F)
+        return dfa.rename(range(len(S)))
+
+    def copy(self):
+        pass
