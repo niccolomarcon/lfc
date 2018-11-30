@@ -152,3 +152,7 @@ class RegEx:
 
     def is_in(self, word: str) -> bool:
         return self.automata.simulate(word + '$')
+
+    def optimize(self):
+        if self.automata.non_deterministic():
+            self.automata = self.automata.subset()
