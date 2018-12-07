@@ -41,7 +41,15 @@ def is_list_of(x: object, t: type) -> bool:
 
 
 def printable_set(x: set) -> str:
-    return '{' + ', '.join(a.__str__() for a in x) + '}'
+    """
+    Return a string that represents the set
+    :param x: The set we want to stringify
+    :return: The set in text form
+    """
+    if type(x) not in [set, frozenset]:
+        raise TypeError('x should be a set or a frozenset')
+
+    return '{' + ', '.join(a.__str__() for a in x) + '}' if len(x) > 0 else '∅'
 
 
 def union(x: set, y: set) -> set:
