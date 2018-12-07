@@ -108,3 +108,6 @@ venv.bak/
 
 # MacOs
 .DS_Store
+
+# Coverage.py and pytest-cov
+coverage/
