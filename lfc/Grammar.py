@@ -33,7 +33,7 @@ class Grammar:
     def from_productions(p: list) -> 'Grammar':
         """
         Create a grammar from a list of productions. The first non terminal
-        symbol in the driver of the first production is used as start symbol
+        symbol in the driver of the first _prd is used as start symbol
         of the grammar. Uppercase symbols are non terminals, lowercase and
         other symbols are terminal.
         :return:
@@ -49,7 +49,7 @@ class Grammar:
 
     def is_free(self) -> bool:
         """
-        Find if all the production's drivers have only one non terminal
+        Find if all the _prd's drivers have only one non terminal
         :return:
         """
         def driver_check(d):
@@ -59,7 +59,7 @@ class Grammar:
 
     def is_regular(self) -> bool:
         """
-        Find if is free and all the production's drivers are in the form aB or 𝝴
+        Find if is free and all the _prd's drivers are in the form aB or 𝝴
         :return:
         """
         def body_check(b):
@@ -166,11 +166,11 @@ class Grammar:
         unmarked = p.copy()
         while len(unmarked) > 0:
             i = unmarked.pop()
-            if i.dot_next() not in self.terminals and i.dot_next() != '':
-                firsts = [self.first(i.after_dot() + [d]) for d in i.delta]
+            if i.next_to_marker() not in self.terminals and i.next_to_marker() != '':
+                firsts = [self.first(i.after_marker() + [d]) for d in i.delta]
                 delta1 = reduce(union, firsts, set())
 
-                b = [i.dot_next()]
+                b = [i.next_to_marker()]
                 b_prods = [p for p in self.productions if p.driver == b]
                 for prd in b_prods:
                     items = map(lambda x: (x.prd, x.dot), p)
@@ -217,7 +217,7 @@ class Grammar:
 
                 # foreach [A->𝝰·Y𝝱, 𝝙] ∈ p do
                 for item in p:
-                    if item.dot_next() == Y:
+                    if item.next_to_marker() == Y:
                         # tmp.add([A->𝝰Y·𝝱, 𝝙])
                         tmp.add(item.next())
 

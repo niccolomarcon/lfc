@@ -102,13 +102,13 @@ class TestProduction:
         with pytest.raises(ValueError) as excinfo:
             text = 'justatest'
             production = lfc.Production.from_text(text)
-        assert 'no arrow (->) in production text' in str(excinfo.value)
+        assert 'no arrow (->) in _prd text' in str(excinfo.value)
 
     def test_from_text_too_many_arrows(self):
         with pytest.raises(ValueError) as excinfo:
             text = 'A->B->C'
             production = lfc.Production.from_text(text)
-        assert 'too many arrows (->) in production text' in str(excinfo.value)
+        assert 'too many arrows (->) in _prd text' in str(excinfo.value)
 
     def test_from_text_text_is_strings_array(self):
         with pytest.raises(TypeError) as excinfo:

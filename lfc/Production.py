@@ -45,16 +45,16 @@ class Production:
 
         n_arrows = text.count('->')
         if n_arrows == 0:
-            raise ValueError('no arrow (->) in production text')
+            raise ValueError('no arrow (->) in _prd text')
         if n_arrows > 1:
-            raise ValueError('too many arrows (->) in production text')
+            raise ValueError('too many arrows (->) in _prd text')
 
         driver, body = tuple(map(list, text.split('->')))
         return Production(driver, body)
 
     def copy(self) -> 'Production':
         """
-        Create a copy of the production
+        Create a copy of the _prd
         :return:
         """
         return Production(self.driver, self.body)
