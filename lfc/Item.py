@@ -1,5 +1,6 @@
 from .Production import Production
 from .utils import is_set_of, printable_set, is_frozenset_of
+import re
 
 
 class Item:
@@ -54,39 +55,33 @@ class Item:
     def from_text(text: str) -> 'Item':
         """
         Create an LR(1)-item from a string in this format:
-        [driver->body_with_marker, {list_of_string}]
+        [driver->body_with_marker, {list_of_strings}]
         :return:
         """
+        error = 'text should be a string in this format [S->a.b, {$, b}]'
+
         if type(text) is not str:
-            raise TypeError('text should be a string')
+            raise TypeError(error)
 
-        # remove the square brackets if needed
-        if text[0] == '[' and text[-1] == ']':
-            text = text[1:-1]
+        matched = re.match(r'\[ *(.*)->(.*)\.(.*) *, *{((?: *.* *,?)*)}\]', text)
+        if not matched:
+            raise ValueError(error)
 
-        if ', ' not in text:
-            raise ValueError('missing comma separation between production and lookahead set')
-
-        # Separates the production from the lookahead set
-        splitted_text = text.split(', ')
-        if len(splitted_text) != 2:
-            raise ValueError('wrong or missing separation between production and lookahead set')
-        production_text, lookahead_text = tuple(splitted_text)
+        driver, fst_body, snd_body, lookahead = matched.group(1, 2, 3, 4)
 
         # Creates the Production object
-        splitted_production_text = production_text.split('.')
-        if len(splitted_production_text) != 2:
-            raise ValueError('wrong or missing . in production')
-        len_of_after_marker = len(splitted_production_text[1])  # need this for later
-        production_text = ''.join(splitted_production_text)
+        len_of_after_marker = len(snd_body)  # need this for later
+        production_text = f'{driver}->{fst_body}{snd_body}'
         prd = Production.from_text(production_text)
 
         # Calculate the marker_position
         marker = len(prd.body) - len_of_after_marker
 
         # Creates the lookahead set
-        lookahead_text = lookahead_text[1:-1]
-        lookahead = set(lookahead_text.split(', '))
+        lookahead = lookahead.split(',')
+        lookahead = filter(lambda c: c != '', lookahead)
+        lookahead = map(lambda c: c.strip(), lookahead)
+        lookahead = set(lookahead)
 
         return Item(prd, marker, lookahead)
 
@@ -103,7 +98,7 @@ class Item:
         Get a list of strings after the string right after the marker
         :return:
         """
-        return self._prd.body[self.dot + 1:]
+        return self._prd.body[self._dot + 1:]
 
     def initial(self, s_first: str, s: str) -> bool:
         """
@@ -167,18 +162,21 @@ class Item:
         [A->𝝰·B𝝱,𝝙].next() => [A->𝝰B·𝝱,𝝙]
         :return:
         """
+        if self._dot >= len(self._prd.body):
+            raise ValueError('item is a reduction or final')
+
         return Item(self._prd, self._dot + 1, self._delta)
 
     def __str__(self) -> str:
         driver = ''.join(self._prd.driver)
         body = self._prd.body[:self._dot] + ['·'] + self._prd.body[self._dot:]
-        delta = printable_set(set(sorted(self._delta)))
+        delta = printable_set(self._delta)
         return f'[{driver}->{"".join(body)}, {delta}]'
 
     def __eq__(self, other) -> bool:
-        res = self._prd == other.prd
-        res &= self._dot == other.dot
-        res &= self._delta == other.delta
+        res = self._prd == other._prd
+        res &= self._dot == other._dot
+        res &= self._delta == other._delta
         return res
 
     def __lt__(self, other: 'Item') -> bool:
