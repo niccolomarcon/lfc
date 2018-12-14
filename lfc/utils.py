@@ -49,6 +49,12 @@ def printable_set(x: set) -> str:
     if type(x) not in [set, frozenset]:
         raise TypeError('x should be a set or a frozenset')
 
+    # Try to sort so we always have the same representation
+    try:
+        x = sorted(x)
+    except TypeError:
+        pass
+
     return '{' + ', '.join(a.__str__() for a in x) + '}' if len(x) > 0 else '∅'
 
 

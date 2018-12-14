@@ -20,6 +20,11 @@ def test_is_collection_of_empty_array():
     assert lfc.is_collection_of(empty_list, list, int)
 
 
+def test_is_collection_of_empty_set():
+    empty_set = set()
+    assert lfc.is_collection_of(empty_set, set, int)
+
+
 def test_is_collection_of_not_a_list():
     not_a_list = {}
     assert not lfc.is_collection_of(not_a_list, list, int)
