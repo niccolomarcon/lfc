@@ -37,12 +37,12 @@ class TestItem:
     def test_init_negative_marker(self):
         with pytest.raises(ValueError) as excinfo:
             lfc.Item(lfc.Production(['S'], ['a', 'b']), -1, {'$'})
-        assert 'marker_position is not between 0 and the length of the production body' in str(excinfo)
+        assert 'marker_position is not between 0 and the length of the production body' in str(excinfo.value)
 
     def test_init_marker_too_big(self):
         with pytest.raises(ValueError) as excinfo:
             lfc.Item(lfc.Production(['S'], ['a', 'b']), 3, {'$'})
-        assert 'marker_position is not between 0 and the length of the production body' in str(excinfo)
+        assert 'marker_position is not between 0 and the length of the production body' in str(excinfo.value)
 
     def test_init_missing_production(self):
         with pytest.raises(TypeError) as excinfo:
